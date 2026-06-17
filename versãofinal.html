@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saúde no Tempo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--verde:#1a6b4a;--vc:#2d9e72;--vs:#e8f5ef;--vm:#a8dfc5;--azul:#1e4d6b;--ac:#ddeef7;--cr:#faf8f4;--cr2:#f0ede6;--tx:#1c2b22;--lv:#5a7266;--br:#ffffff;--am:#f5a623;--vm2:#d94f4f;--s1:0 4px 24px rgba(26,107,74,.10);--s2:0 2px 12px rgba(26,107,74,.08);--r:16px;--rs:10px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--cr);color:var(--tx);min-height:100vh;overflow-x:hidden}
+/* TOAST */
+#toast{position:fixed;top:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.ti{background:var(--tx);color:#fff;padding:12px 20px;border-radius:var(--rs);font-size:13px;font-weight:500;box-shadow:var(--s1);animation:tIn .3s ease;max-width:320px;border-left:4px solid var(--vc)}
+.ti.err{border-left-color:var(--vm2)}
+.ti.out{animation:tOut .3s ease forwards}
+@keyframes tIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tOut{to{opacity:0;transform:translateX(30px)}}
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center}
+.mo.open{display:flex}
+.mc{background:#fff;border-radius:var(--r);padding:32px;width:90%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:mS .25s ease;max-height:90vh;overflow-y:auto}
+@keyframes mS{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mc h3{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:20px}
+.mf{margin-bottom:14px}
+.mf label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.mf input,.mf select,.mf textarea{width:100%;padding:11px 13px;border:1.5px solid #e0ddd6;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--tx);background:var(--cr);outline:none;transition:border-color .2s,box-shadow .2s}
+.mf input:focus,.mf select:focus,.mf textarea:focus{border-color:var(--vc);box-shadow:0 0 0 3px rgba(45,158,114,.12);background:#fff}
+.mf textarea{resize:vertical;min-height:72px}
+.mb{display:flex;gap:10px;margin-top:22px;justify-content:flex-end}
+.bc{padding:10px 20px;border-radius:var(--rs);border:1.5px solid var(--cr2);background:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;color:var(--lv);transition:background .15s}
+.bc:hover{background:var(--cr2)}
+.bk{padding:10px 20px;border-radius:var(--rs);border:none;background:linear-gradient(135deg,var(--verde),var(--vc));color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 3px 12px rgba(26,107,74,.25);transition:transform .15s,box-shadow .15s}
+.bk:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(26,107,74,.35)}
+.bk.red{background:linear-gradient(135deg,#b33,var(--vm2));box-shadow:0 3px 12px rgba(217,79,79,.25)}
+.bk.red:hover{box-shadow:0 5px 16px rgba(217,79,79,.35)}
+
+/* UPLOAD FOTO STYLING */
+.photo-upload-container{display:flex;align-items:center;gap:16px;background:var(--cr);padding:12px;border-radius:var(--rs);border:1.5px dashed #e0ddd6;margin-bottom:14px}
+.photo-preview-box{width:64px;height:64px;border-radius:50%;background:var(--vs);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--verde);overflow:hidden;flex-shrink:0;border:2px solid #fff;box-shadow:var(--s2)}
+.photo-preview-box img{width:100%;height:100%;object-fit:cover}
+.photo-upload-btn{position:relative;display:inline-block}
+.photo-upload-btn input[type="file"]{position:absolute;left:0;top:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.photo-btn-label{padding:8px 14px;background:#fff;border:1.5px solid var(--cr2);border-radius:8px;font-size:12px;font-weight:600;color:var(--lv);cursor:pointer;transition:all .15s;display:inline-block}
+.photo-upload-btn:hover .photo-btn-label{background:var(--vs);border-color:var(--vm);color:var(--verde)}
+
+/* LOGIN */
+#pg-login{min-height:100vh;display:flex;align-items:stretch}
+.ll{flex:1;background:linear-gradient(145deg,var(--verde) 0%,var(--azul) 100%);display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:60px;position:relative;overflow:hidden}
+.ll::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:rgba(255,255,255,.05);top:-100px;left:-100px}
+.ll::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.04);bottom:-80px;right:-60px}
+.br2{position:relative;z-index:1}
+.bi{width:56px;height:56px;background:rgba(255,255,255,.15);border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:24px;font-size:28px}
+.br2 h1{font-family:'DM Serif Display',serif;font-size:42px;color:#fff;line-height:1.1;margin-bottom:16px}
+.br2 h1 em{font-style:italic;color:var(--vm)}
+.br2 p{color:rgba(255,255,255,.72);font-size:16px;max-width:360px;line-height:1.7;font-weight:300}
+.lf2{margin-top:48px;display:flex;flex-direction:column;gap:16px;position:relative;z-index:1}
+.fi{display:flex;align-items:center;gap:14px;color:rgba(255,255,255,.85);font-size:14px}
+.fd{width:32px;height:32px;background:rgba(255,255,255,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.lr{width:480px;background:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:56px 46px;animation:fadeSlide .5s ease}
+.lform{width:100%}
+.lform h2{font-family:'DM Serif Display',serif;font-size:28px;margin-bottom:5px}
+.lform .sub{color:var(--lv);font-size:14px;margin-bottom:26px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.field input,.field select{width:100%;padding:12px 14px;border:1.5px solid #e0ddd6;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--tx);background:var(--cr);outline:none;transition:border-color .2s,box-shadow .2s}
+.field input:focus,.field select:focus{border-color:var(--vc);box-shadow:0 0 0 3px rgba(45,158,114,.12);background:#fff}
+.field input::placeholder{color:#b0aca4}
+.bp{width:100%;padding:14px;background:linear-gradient(135deg,var(--verde),var(--vc));color:#fff;border:none;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;margin-top:6px;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 16px rgba(26,107,74,.25)}
+.bp:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(26,107,74,.35)}
+.lfoot{margin-top:18px;text-align:center;font-size:13px;color:var(--lv)}
+.lfoot a{color:var(--verde);text-decoration:none;font-weight:500;cursor:pointer}
+.tabs{display:flex;margin-bottom:26px;border:1.5px solid var(--cr2);border-radius:var(--rs);overflow:hidden}
+.tb{flex:1;padding:11px;background:var(--cr);border:none;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;color:var(--lv);transition:background .15s,color .15s}
+.tb.active{background:var(--verde);color:#fff;font-weight:600}
+
+/* APP */
+#pg-app{display:none;flex-direction:row;min-height:100vh}
+#pg-app.active{display:flex}
+/* SIDEBAR */
+.sb{width:260px;background:#fff;border-right:1px solid var(--cr2);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;box-shadow:2px 0 16px rgba(26,107,74,.06)}
+.sb-brand{padding:22px 24px 18px;border-bottom:1px solid var(--cr2);display:flex;align-items:center;gap:12px}
+.sb-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--verde),var(--vc));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.sb-nm{font-family:'DM Serif Display',serif;font-size:18px;line-height:1.2}
+.sb-nm span{color:var(--verde)}
+.sb-user{padding:17px 22px;display:flex;align-items:center;gap:12px;background:var(--vs);border-bottom:1px solid var(--cr2);cursor:pointer;transition:background .15s}
+.sb-user:hover{background:#d5eee4}
+.av{width:40px;height:40px;background:linear-gradient(135deg,var(--vc),var(--azul));border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;flex-shrink:0;overflow:hidden;border:1px solid rgba(0,0,0,.05)}
+.av img{width:100%;height:100%;object-fit:cover}
+.ui-name{font-size:14px;font-weight:600}
+.ui-cpf{font-size:12px;color:var(--lv)}
+.ui-hint{font-size:11px;color:var(--verde);font-weight:600;margin-top:2px}
+.sb-nav{flex:1;padding:13px 11px;overflow-y:auto}
+.ns{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--lv);text-transform:uppercase;padding:7px 12px 5px;margin-top:5px}
+.ni{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:var(--rs);cursor:pointer;transition:background .15s,color .15s;font-size:14px;font-weight:500;color:var(--lv);margin-bottom:2px;position:relative}
+.ni:hover{background:var(--vs);color:var(--verde)}
+.ni.active{background:var(--vs);color:var(--verde);font-weight:600}
+.ni.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--verde);border-radius:2px}
+.ni .ic{font-size:18px;width:22px;text-align:center}
+.bdg{margin-left:auto;background:var(--vm2);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
+.sb-out{padding:13px 11px;border-top:1px solid var(--cr2)}
+.btn-out{display:flex;align-items:center;gap:10px;width:100%;padding:10px 13px;border-radius:var(--rs);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--vm2);transition:background .15s}
+.btn-out:hover{background:#fdeaea}
+/* MAIN */
+.mn{margin-left:260px;flex:1;min-height:100vh;background:var(--cr)}
+.topbar{background:#fff;border-bottom:1px solid var(--cr2);padding:15px 34px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar h2{font-family:'DM Serif Display',serif;font-size:22px}
+.dc{background:var(--vs);color:var(--verde);padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600}
+.cnt{padding:28px 34px}
+.sec{display:none}
+.sec.active{display:block;animation:fadeSlide .3s ease}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* DASHBOARD */
+.wb{background:linear-gradient(130deg,var(--verde) 0%,var(--azul) 100%);border-radius:var(--r);padding:26px 30px;margin-bottom:24px;position:relative;overflow:hidden}
+.wb::after{content:'🏥';position:absolute;right:24px;font-size:80px;opacity:.12;top:-10px}
+.wb .wt{color:rgba(255,255,255,.75);font-size:14px;margin-bottom:3px}
+.wb .wn{font-family:'DM Serif Display',serif;font-size:26px;color:#fff}
+.wb .ws{color:rgba(255,255,255,.7);font-size:13px;margin-top:5px}
+.cg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.sc{background:#fff;border-radius:var(--r);padding:20px;box-shadow:var(--s2);display:flex;align-items:flex-start;gap:13px}
+.si{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+.si.g{background:var(--vs)}.si.b{background:var(--ac)}.si.y{background:#fff8e6}
+.sv{font-size:26px;font-weight:700;line-height:1;margin-bottom:3px}
+.sl{font-size:13px;color:var(--lv)}
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:#fff;border-radius:var(--r);padding:22px;box-shadow:var(--s2)}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.ct{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.ca{font-size:12px;color:var(--verde);font-weight:600;cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;padding:6px 10px;border-radius:var(--rs);transition:background .15s}
+.ca:hover{background:var(--vs)}
+.ai{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--cr2)}
+.ai:last-child{border-bottom:none}
+.ad{width:44px;background:var(--vs);border-radius:99px;padding:7px;text-align:center;flex-shrink:0}
+.ad .dy{font-size:18px;font-weight:700;color:var(--verde);line-height:1}
+.ad .mn2{font-size:10px;color:var(--verde);font-weight:600;text-transform:uppercase}
+.an .dn{font-size:14px;font-weight:600}
+.an .sp{font-size:12px;color:var(--lv)}
+.ast{margin-left:auto;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.sco{background:#e8f5ef;color:var(--verde)}.spd{background:#fff4e0;color:#c07800}.scl{background:#fdeaea;color:var(--vm2)}
+.di{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--cr2)}
+.di:last-child{border-bottom:none}
+.da{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.da.c1{background:#e8f5ef}.da.c2{background:var(--ac)}.da.c3{background:#fff4e0}
+.dn2{font-size:14px;font-weight:600} .ds{font-size:12px;color:var(--lv)}
+.dc2{margin-left:auto;font-size:11px;color:var(--lv);background:var(--cr2);padding:3px 8px;border-radius:6px}
+.ip{grid-column:1/-1}
+.ii-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.ii{padding:14px;border-radius:var(--rs);display:flex;gap:10px}
+.ii.vd{background:var(--vs)}.ii.az{background:var(--ac)}.ii.am{background:#fff8e6}
+.ii-ic{font-size:21px;flex-shrink:0}
+.ii-ti{font-size:13px;font-weight:700;margin-bottom:2px}
+.ii-tx{font-size:12px;color:var(--lv);line-height:1.5}
+
+/* AGEND */
+.ag-item{background:#fff;border-radius:var(--r);padding:18px;box-shadow:var(--s2);display:flex;align-items:center;gap:14px;margin-bottom:12px;transition:box-shadow .15s}
+.ag-item:hover{box-shadow:var(--s1)}
+.ag-dt{width:52px;background:var(--vs);border-radius:11px;padding:9px;text-align:center;flex-shrink:0}
+.ag-dt .dy{font-size:21px;font-weight:700;color:var(--verde);line-height:1}
+.ag-dt .mn2{font-size:10px;color:var(--verde);font-weight:600;text-transform:uppercase}
+.ag-inf{flex:1}
+.ag-inf .doc{font-size:15px;font-weight:700}
+.ag-inf .spe{font-size:13px;color:var(--lv);margin-top:2px}
+.ag-inf .obs{font-size:12px;color:var(--lv);margin-top:3px}
+.ag-acts{display:flex;gap:7px;flex-shrink:0}
+.be{padding:7px 13px;border-radius:var(--rs);border:1.5px solid var(--vm);background:#fff;color:var(--verde);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s}
+.be:hover{background:var(--vs)}
+.bd{padding:7px 13px;border-radius:var(--rs);border:1.5px solid #f5c5c5;background:#fff;color:var(--vm2);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s}
+.bd:hover{background:#fdeaea}
+.btn-new{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:var(--rs);border:none;background:linear-gradient(135deg,var(--verde),var(--vc));color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 3px 12px rgba(26,107,74,.25);margin-bottom:20px;transition:transform .15s,box-shadow .15s}
+.btn-new:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(26,107,74,.35)}
+.empty{text-align:center;padding:44px;color:var(--lv);background:#fff;border-radius:var(--r);box-shadow:var(--s2)}
+.empty .ei{font-size:46px;margin-bottom:10px}
+
+/* HIST */
+.hf{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.fb{padding:7px 16px;border-radius:20px;border:1.5px solid var(--cr2);background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;color:var(--lv);transition:all .15s}
+.fb.active,.fb:hover{border-color:var(--verde);color:var(--verde);background:var(--vs)}
+.ht{background:#fff;border-radius:var(--r);box-shadow:var(--s2);overflow:hidden}
+.ht table{width:100%;border-collapse:collapse}
+.ht thead tr{background:var(--cr2)}
+.ht th{padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--lv);text-transform:uppercase;letter-spacing:.5px}
+.ht td{padding:13px 16px;font-size:14px;border-bottom:1px solid var(--cr2)}
+.ht tbody tr:last-child td{border-bottom:none}
+.ht tbody tr:hover td{background:var(--cr)}
+.tag{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.tr{background:#e8f5ef;color:var(--verde)}.tc{background:#fdeaea;color:var(--vm2)}.ta{background:#fff4e0;color:#c07800}
+
+/* MEDICOS */
+.mc2{background:#fff;border-radius:var(--r);padding:26px;box-shadow:var(--s2);text-align:center;transition:transform .15s,box-shadow .15s}
+.mc2:hover{transform:translateY(-3px);box-shadow:var(--s1)}
+.mc2 .mci{font-size:48px;margin-bottom:10px}
+.mc2 .mcn{font-size:16px;font-weight:700;margin-bottom:3px}
+.mc2 .mce{font-size:13px;color:var(--lv);margin-bottom:7px}
+.mc2 .mcc{display:inline-block;font-size:12px;color:var(--lv);background:var(--cr2);padding:3px 9px;border-radius:6px;margin-bottom:8px}
+.mc2 .mcd{font-size:13px;color:var(--lv)}
+.mc-btn{margin-top:13px;width:100%;padding:9px;border-radius:var(--rs);border:none;background:var(--vs);color:var(--verde);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.mc-btn:hover{background:var(--vm)}
+
+/* AVISOS */
+.av-list{display:flex;flex-direction:column;gap:13px}
+.av-c{background:#fff;border-radius:var(--r);padding:20px 22px;box-shadow:var(--s2);display:flex;gap:15px;align-items:flex-start;border-left:4px solid transparent;transition:transform .15s}
+.av-c:hover{transform:translateX(4px)}
+.av-c.urg{border-left-color:var(--vm2)}.av-c.inf{border-left-color:var(--verde)}.av-c.alt{border-left-color:var(--am)}
+.av-ic{font-size:25px;flex-shrink:0;margin-top:2px}
+.av-ti{font-size:15px;font-weight:700;margin-bottom:4px}
+.av-tx{font-size:14px;color:var(--lv);line-height:1.6}
+.av-mt{display:flex;align-items:center;gap:9px;margin-top:7px}
+.av-dt{font-size:12px;color:var(--lv)}
+.av-tg{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+.av-tg.urg{background:#fdeaea;color:var(--vm2)}.av-tg.inf{background:var(--vs);color:var(--verde)}.av-tg.alt{background:#fff4e0;color:#c07800}
+
+/* DOCS */
+.dg2{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.dc3{background:#fff;border-radius:var(--r);padding:18px;box-shadow:var(--s2);text-align:center;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s;border:1.5px solid transparent;position:relative}
+.dc3:hover{transform:translateY(-3px);box-shadow:var(--s1);border-color:var(--vm)}
+.dc3 .dci{font-size:36px;margin-bottom:9px}
+.dc3 .dcn{font-size:14px;font-weight:700;margin-bottom:3px}
+.dc3 .dcd{font-size:12px;color:var(--lv)}
+.dcb{display:inline-block;margin-top:8px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+.dcb.pdf{background:#fdeaea;color:var(--vm2)}.dcb.img{background:var(--ac);color:var(--azul)}
+.btn-del-doc{position:absolute;top:10px;right:10px;background:#fdeaea;color:var(--vm2);border:none;width:24px;height:24px;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+.dc3:hover .btn-del-doc{opacity:1}
+.btn-del-doc:hover{background:var(--vm2);color:#fff}
+
+/* PERFIL */
+.pc{background:#fff;border-radius:var(--r);padding:30px;box-shadow:var(--s2);max-width:540px}
+.ph{display:flex;align-items:center;gap:18px;margin-bottom:26px;padding-bottom:22px;border-bottom:1px solid var(--cr2)}
+.pav{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--vc),var(--azul));display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;font-weight:700;flex-shrink:0;overflow:hidden;border:2px solid #fff;box-shadow:var(--s2)}
+.pav img{width:100%;height:100%;object-fit:cover}
+.pn{font-family:'DM Serif Display',serif;font-size:24px}
+.pc2{font-size:14px;color:var(--lv);margin-top:4px}
+.prow {margin-bottom:16px}
+.prow label{font-size:13px;font-weight:600;color:var(--lv);margin-bottom:3px;display:block}
+.prow .pv{font-size:15px;font-weight:500}
+
+/* ESTILIZAÇÃO DO PREVISUALIZADOR REAL DE DOCUMENTOS OFICIAIS */
+#doc-viewer-modal .mc {max-width:800px;width:95%;padding:0;overflow:hidden;background:#525659;border-radius:var(--r)}
+.doc-viewer-header {background:#323639;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;color:#fff}
+.doc-viewer-header h4 {font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-viewer-body {padding:40px;background:#525659;max-height:75vh;overflow-y:auto;display:flex;justify-content:center}
+/* Folha A4 Mimic */
+.a4-page {background:#fff;width:100%;max-width:210mm;min-height:297mm;padding:25mm 20mm;color:#000;font-family:'Times New Roman',Times,serif;box-shadow:0 4px 16px rgba(0,0,0,.35);position:relative;box-sizing:border-box;display:flex;flex-direction:column}
+.a4-logo {font-family:'DM Serif Display',serif;font-size:24px;color:var(--verde);text-align:center;line-height:1;margin-bottom:4px}
+.a4-sub {font-family:'DM Sans',sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--lv);text-align:center;margin-bottom:20px;border-bottom:2px solid var(--verde);padding-bottom:10px}
+.a4-title {font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;text-align:center;text-transform:uppercase;margin:25px 0;letter-spacing:.5px;color:#111}
+.a4-content {font-size:14px;line-height:1.6;color:#222;flex:1}
+.a4-content p {margin-bottom:14px;text-align:justify}
+.a4-paciente-box {background:#f9f8f6;border:1px dashed #d0cbd0;padding:12px 16px;border-radius:6px;margin-bottom:24px;font-family:'DM Sans',sans-serif;font-size:13px}
+.a4-paciente-box table {width:100%;border-collapse:collapse}
+.a4-paciente-box td {padding:4px 0}
+.a4-footer {margin-top:auto;text-align:center;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--lv);border-top:1px solid var(--cr2);padding-top:15px}
+.a4-assinatura {text-align:center;margin-top:40px;margin-bottom:30px;font-family:'DM Sans',sans-serif}
+.a4-line {width:220px;height:1px;background:#000;margin:0 auto 6px}
+/* Estilos para tabelas de Exame de Sangue e ECG */
+.a4-table {width:100%;border-collapse:collapse;margin:15px 0;font-family:'DM Sans',sans-serif;font-size:13px}
+.a4-table th {background:#f0ede6;padding:8px 10px;text-align:left;font-weight:600;border-bottom:2px solid #000}
+.a4-table td {padding:8px 10px;border-bottom:1px solid #e0ddd6}
+.a4-table tr.alt td {background:#faf9f6}
+.val-alerta {color:var(--vm2);font-weight:700}
+/* Grid simulador de ECG ou Raio-X */
+.ecg-grid-sim {width:100%;height:140px;background:#fff5f5;border:1px solid #ffcccc;background-image:linear-gradient(rgba(255,204,204,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,204,204,.4) 1px,transparent 1px);background-size:10px 10px;position:relative;margin:15px 0;border-radius:4px}
+.ecg-wave {position:absolute;inset:0;width:100%;height:100%;opacity:.75}
+.rx-frame {width:100%;max-width:340px;height:240px;background:#05070a;border:6px solid #222;margin:20px auto;border-radius:4px;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:inset 0 0 40px rgba(255,255,255,.1)}
+.rx-skeleton {width:85%;height:85%;border:2px dashed rgba(255,255,255,.15);border-radius:50% 50% 20% 20%;position:relative;display:flex;flex-direction:column;justify-content:space-around;padding:20px 0}
+.rx-rib {width:90%;height:4px;background:rgba(255,255,255,.25);border-radius:2px;margin:0 auto}
+.rx-spine {position:absolute;left:50%;top:0;bottom:0;width:8px;background:rgba(255,255,255,.3);transform:translateX(-50%)}
+.rx-label-side {position:absolute;right:15px;top:15px;color:#ff3333;font-size:14px;font-weight:700;font-family:'DM Sans'}
+
+@media(max-width:1200px){.cg,.ii-grid,.dg2{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.ll{display:none}.lr{width:100%}.sb{width:220px}.mn{margin-left:220px}.dg{grid-template-columns:1fr}}
+
+/* Estilos de Impressão nativa para simular o Download perfeito do PDF */
+@media print {
+  body * {visibility:hidden}
+  #doc-viewer-modal, #doc-viewer-modal * {visibility:visible}
+  #doc-viewer-modal {position:absolute;left:0;top:0;width:100%;background:#fff}
+  .doc-viewer-header, .doc-viewer-header * {display:none!important}
+  .doc-viewer-body {padding:0;background:#fff;max-height:none;overflow:visible}
+  .a4-page {box-shadow:none;padding:0;margin:0;width:100%}
+}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<div class="mo" id="doc-viewer-modal">
+  <div class="mc" style="max-width:820px">
+    <div class="doc-viewer-header">
+      <h4 id="dv-header-title">Visualizador Oficial de Documentos</h4>
+      <div style="display:flex;gap:10px">
+        <button class="bk" onclick="window.print()" style="padding:6px 14px;font-size:12px;background:var(--azul)">🖨️ Imprimir / Salvar PDF</button>
+        <button class="bc" onclick="fM('doc-viewer-modal')" style="padding:6px 14px;font-size:12px;background:#424649;color:#fff;border:none">Fechar</button>
+      </div>
+    </div>
+    <div class="doc-viewer-body">
+      <div class="a4-page" id="a4-render-area"></div>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="m-agend">
+  <div class="mc">
+    <h3 id="m-agend-ti">Novo Agendamento</h3>
+    <input type="hidden" id="ae-id">
+    <div class="mf"><label>Médico</label>
+      <select id="ae-med">
+        <option value="">Selecione...</option>
+        <option>Dra. Ana Paula Costa — Clínica Geral</option>
+        <option>Dr. Carlos Menezes — Cardiologia</option>
+        <option>Dra. Fernanda Lima — Endocrinologia</option>
+      </select>
+    </div>
+    <div class="mf"><label>Data da Consulta</label><input type="date" id="ae-data"></div>
+    <div class="mf"><label>Horário</label>
+      <select id="ae-hora">
+        <option>07:30</option><option>08:00</option><option>08:30</option><option>09:00</option><option>09:30</option><option>10:00</option><option>10:30</option><option>11:00</option><option>13:00</option><option>13:30</option><option>14:00</option><option>14:30</option><option>15:00</option><option>15:30</option><option>16:00</option>
+      </select>
+    </div>
+    <div class="mf"><label>Tipo de Consulta</label>
+      <select id="ae-tipo"><option>Consulta de Rotina</option><option>Retorno</option><option>Urgência</option><option>Pré-natal</option><option>Exame</option></select>
+    </div>
+    <div class="mf"><label>Observações (opcional)</label><textarea id="ae-obs" placeholder="Informe sintomas ou outras observações..."></textarea></div>
+    <div class="mb"><button class="bc" onclick="fM('m-agend')">Cancelar</button><button class="bk" onclick="salvarAg()">Confirmar</button></div>
+  </div>
+</div>
+
+<div class="mo" id="m-cancel">
+  <div class="mc">
+    <h3>Cancelar Agendamento</h3>
+    <p style="color:var(--lv);font-size:14px;line-height:1.7;margin-bottom:16px">Tem certeza que deseja cancelar esta consulta? O horário será liberado e a ação não poderá ser desfeita.</p>
+    <input type="hidden" id="ca-id">
+    <div class="mb"><button class="bc" onclick="fM('m-cancel')">Voltar</button><button class="bk red" onclick="confCancel()">Sim, cancelar</button></div>
+  </div>
+</div>
+
+<div class="mo" id="m-doc">
+  <div class="mc">
+    <h3>Adicionar Documento</h3>
+    <div class="mf"><label>Nome do Documento</label><input type="text" id="dc-nm" placeholder="Ex: Receita médica, Laudo..."></div>
+    <div class="mf"><label>Tipo</label><select id="dc-tp"><option value="pdf">📄 PDF</option><option value="img">🖼️ Imagem</option></select></div>
+    <div class="mf"><label>Categoria</label>
+      <select id="dc-cat">
+        <option value="Receita Médica">Receita Médica</option>
+        <option value="Laudo / Resultado">Laudo / Resultado</option>
+        <option value="Atestado">Atestado</option>
+        <option value="Declaração">Declaração</option>
+        <option value="Exame de Imagem">Exame de Imagem</option>
+        <option value="Outros">Outros</option>
+      </select>
+    </div>
+    <div class="mf"><label>Data de Emissão</label><input type="date" id="dc-dt"></div>
+    <div class="mb"><button class="bc" onclick="fM('m-doc')">Cancelar</button><button class="bk" onclick="salvarDoc()">Adicionar</button></div>
+  </div>
+</div>
+
+<div class="mo" id="m-perfil">
+  <div class="mc">
+    <h3>Editar Perfil</h3>
+    <div class="photo-upload-container">
+      <div class="photo-preview-box" id="pf-photo-prev">👤</div>
+      <div>
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:4px">Foto de Perfil</label>
+        <div class="photo-upload-btn">
+          <span class="photo-btn-label">Escolher Foto</span>
+          <input type="file" id="pf-photo-input" accept="image/*" onchange="tratarUploadFoto(this, 'pf-photo-prev')">
+        </div>
+      </div>
+    </div>
+    <div class="mf"><label>Nome Completo</label><input type="text" id="pf-nm"></div>
+    <div class="mf"><label>Data de Nascimento</label><input type="date" id="pf-nasc"></div>
+    <div class="mf"><label>Telefone</label><input type="text" id="pf-tel" placeholder="(85) 99999-9999" maxlength="15"></div>
+    <div class="mf"><label>E-mail</label><input type="email" id="pf-em" placeholder="seu@email.com"></div>
+    <div class="mf"><label>Unidade de Saúde</label>
+      <select id="pf-ubs">
+        <option>UBASF Maria Morais do Nascimento (Distrito de Mapuá) — Rua Cel. Virgílio Nogueira Paz, s/n</option>
+        <option>UBASF Antônio Osmar Gomes (Distrito de Nova Floresta) — Rua José Lúcio Maia, s/n</option>
+        <option>UBASF Maria Kátia Campelo de Farias de Freitas (Distrito de Feiticeiro) — Rua Benedito Bezerra de Oliveira, s/n</option>
+        <option>UBASF Naíde Guedes Diógenes (Distrito de Aquinópolis / Vertentes) — Região de Vertentes</option>
+        <option>Unidade Básica de Saúde Sítio Córrego das Pedras — Sítio Córrego das Pedras, s/n</option>
+        <option>UBASF Edmar Barreira Pinheiro (Sede) — Rua Antônio Weima Fernandes Bezerra, 831</option>
+        <option>UBASF Antonio Gomes (Sede) — Rua Josefa Peixoto de Lemos, 351</option>
+        <option>UBASF José Rodrigues Pinheiro (Sede) — Rua Antônio Rodrigues Pinheiro</option>
+        <option>UBASF Maria Alice Diógenes Botão (Sede) — Alto do Cruzeiro, s/n</option>
+        <option>UBASF Nossa Senhora das Candeias (Sede) — Região Central / Centro</option>
+        <option>UBASF Maêdja Barreira Gomes (Sede) — Rua Prefeito Valmir Diógenes Pinheiro</option>
+      </select>
+    </div>
+    <div class="mf"><label>Nova Senha (deixe em branco para manter)</label><input type="password" id="pf-pw" placeholder="••••••••"></div>
+    <div class="mb"><button class="bc" onclick="fM('m-perfil')">Cancelar</button><button class="bk" onclick="salvarPerfil()">Salvar</button></div>
+  </div>
+</div>
+
+<div id="pg-login">
+  <div class="ll">
+    <div class="br2">
+      <div class="bi">🌿</div>
+      <h1>Saúde<br><em>no Tempo</em></h1>
+      <p>Plataforma digital para pacientes de unidades públicas de saúde. Seu histórico, médicos e documentos em um só lugar com banco de dados local.</p>
+    </div>
+    <div class="lf2">
+      <div class="fi"><div class="fd">📅</div>Acompanhe e gerencie seus agendamentos</div>
+      <div class="fi"><div class="fd">📋</div>Acesse o histórico completo de atendimentos</div>
+      <div class="fi"><div class="fd">📄</div>Baixe documentos e laudos médicos</div>
+      <div class="fi"><div class="fd">💾</div>Dados salvos de forma segura no seu navegador</div>
+    </div>
+  </div>
+  <div class="lr">
+    <div class="lform">
+      <div class="tabs">
+        <button class="tb active" onclick="trocarTab('login',this)">Entrar</button>
+        <button class="tb" onclick="trocarTab('cad',this)">Criar Conta</button>
+      </div>
+      <div id="tab-login">
+        <h2>Bem-vindo(a)</h2>
+        <p class="sub">Acesse com seu CPF e senha cadastrados.</p>
+        <p class="sub" style="background:var(--vs);padding:10px 14px;border-radius:var(--rs);margin-top:-10px;font-size:12px;color:var(--verde)">💡 Conta demo: CPF <b>123.456.789-00</b> · Senha <b>123456</b> (Fica gravada automaticamente ao acessar pela primeira vez)</p>
+        <div style="height:14px"></div>
+        <div class="field"><label>CPF</label><input id="inp-cpf" type="text" placeholder="000.000.000-00" maxlength="14"></div>
+        <div class="field"><label>Senha</label><input id="inp-pw" type="password" placeholder="••••••••"></div>
+        <button class="bp" onclick="fazerLogin()">Acessar minha conta →</button>
+        <div class="lfoot"><a onclick="trocarTab('cad',document.querySelectorAll('.tb')[1])">Não tem conta? Cadastre-se</a></div>
+      </div>
+      <div id="tab-cad" style="display:none">
+        <h2>Criar conta</h2>
+        <p class="sub">Preencha seus dados para se cadastrar.</p>
+        <div class="photo-upload-container">
+          <div class="photo-preview-box" id="c-photo-prev">👤</div>
+          <div>
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:4px">Foto de Perfil (Opcional)</label>
+            <div class="photo-upload-btn">
+              <span class="photo-btn-label">Escolher Foto</span>
+              <input type="file" id="c-photo-input" accept="image/*" onchange="tratarUploadFoto(this, 'c-photo-prev')">
+            </div>
+          </div>
+        </div>
+        <div class="field"><label>Nome Completo</label><input id="c-nm" type="text" placeholder="Seu nome completo"></div>
+        <div class="field"><label>CPF</label><input id="c-cpf" type="text" placeholder="000.000.000-00" maxlength="14"></div>
+        <div class="field"><label>Data de Nascimento</label><input id="c-nasc" type="date"></div>
+        <div class="field"><label>Telefone</label><input id="c-tel" type="text" placeholder="(85) 99999-9999" maxlength="15"></div>
+        <div class="field"><label>Unidade de Saúde</label>
+          <select id="c-ubs">
+            <option value="">Selecione sua UBASF...</option>
+            <option>UBASF Maria Morais do Nascimento (Distrito de Mapuá) — Rua Cel. Virgílio Nogueira Paz</option>
+            <option>UBASF Antônio Osmar Gomes (Distrito de Nova Floresta) — Rua José Lúcio Maia</option>
+            <option>UBASF Maria Kátia Campelo de Farias de Freitas (Distrito de Feiticeiro) — Rua Benedito Bezerra de Oliveira</option>
+            <option>UBASF Naíde Guedes Diógenes (Distrito de Aquinópolis / Vertentes) — Região de Vertentes</option>
+            <option>Unidade Básica de Saúde Sítio Córrego das Pedras — Sítio Córrego das Pedras</option>
+            <option>UBASF Edmar Barreira Pinheiro (Sede) — Rua Antônio Weima Fernandes Bezerra</option>
+            <option>UBASF Antonio Gomes (Sede) — Rua Josefa Peixoto de Lemos</option>
+            <option>UBASF José Rodrigues Pinheiro (Sede) — Rua Antônio Rodrigues Pinheiro</option>
+            <option>UBASF Maria Alice Diógenes Botão (Sede) — Alto do Cruzeiro</option>
+            <option>UBASF Nossa Senhora das Candeias (Sede) — Região Central / Centro</option>
+            <option>UBASF Maêdja Barreira Gomes (Sede) — Rua Prefeito Valmir Diógenes Pinheiro</option>
+          </select>
+        </div>
+        <div class="field"><label>Senha</label><input id="c-pw" type="password" placeholder="Mínimo 6 caracteres"></div>
+        <div class="field"><label>Confirmar Senha</label><input id="c-pw2" type="password" placeholder="Repita a senha"></div>
+        <button class="bp" onclick="criarConta()">Criar minha conta →</button>
+        <div class="lfoot"><a onclick="trocarTab('login',document.querySelectorAll('.tb')[0])">Já tenho conta</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="pg-app">
+  <aside class="sb">
+    <div class="sb-brand">
+      <div class="sb-icon">🌿</div>
+      <div class="sb-nm">Saúde<br><span>no Tempo</span></div>
+    </div>
+    <div class="sb-user" onclick="abrirPerfil()" title="Editar perfil">
+      <div class="av" id="sb-av">?</div>
+      <div>
+        <div class="ui-name" id="sb-nm">—</div>
+        <div class="ui-cpf" id="sb-cpf">—</div>
+        <div class="ui-hint">✏️ Editar perfil</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="ns">Principal</div>
+      <div class="ni active" onclick="nav('dash',this)"><span class="ic">🏠</span>Início</div>
+      <div class="ns">Saúde</div>
+      <div class="ni" onclick="nav('agend',this)"><span class="ic">📅</span>Agendamentos</div>
+      <div class="ni" onclick="nav('hist',this)"><span class="ic">📋</span>Histórico</div>
+      <div class="ni" onclick="nav('med',this)"><span class="ic">👨‍⚕️</span>Meus Médicos</div>
+      <div class="ns">Informações</div>
+      <div class="ni" onclick="nav('avisos',this)"><span class="ic">🔔</span>Avisos<span class="bdg" id="bdg-av">3</span></div>
+      <div class="ni" onclick="nav('docs',this)"><span class="ic">📄</span>Documentos</div>
+      <div class="ni" onclick="nav('perfil',this)"><span class="ic">👤</span>Meu Perfil</div>
+    </nav>
+    <div class="sb-out"><button class="btn-out" onclick="sair()">🚪 Sair da conta</button></div>
+  </aside>
+
+  <main class="mn">
+    <div class="topbar">
+      <h2 id="tp-title">Início</h2>
+      <span class="dc" id="tp-date"></span>
+    </div>
+    <div class="cnt">
+
+      <div class="sec active" id="sec-dash">
+        <div class="wb"><div class="wt">Bem-vindo(a) de volta,</div><div class="wn" id="d-nm">—</div><div class="ws" id="d-ubs">—</div></div>
+        <div class="cg">
+          <div class="sc"><div class="si g">📅</div><div><div class="sv" id="st-ag">0</div><div class="sl">Consultas agendadas</div></div></div>
+          <div class="sc"><div class="si b">👨‍⚕️</div><div><div class="sv">3</div><div class="sl">Médicos vinculados</div></div></div>
+          <div class="sc"><div class="si y">📄</div><div><div class="sv" id="st-dc">0</div><div class="sl">Documentos disponíveis</div></div></div>
+        </div>
+        <div class="dg">
+          <div class="card">
+            <div class="ch"><div class="ct">📅 Próximas Consultas</div><button class="ca" onclick="nav('agend',document.querySelectorAll('.ni')[1])">Ver tudo</button></div>
+            <div id="d-agend-list"><div class="empty"><div class="ei">📅</div><p>Nenhuma consulta agendada</p></div></div>
+          </div>
+          <div class="card">
+            <div class="ch"><div class="ct">👨‍⚕️ Meus Médicos</div><button class="ca" onclick="nav('med',document.querySelectorAll('.ni')[3])">Ver tudo</button></div>
+            <div class="di"><div class="da c1">👩‍⚕️</div><div><div class="dn2">Dra. Ana Paula Costa</div><div class="ds">Clínica Geral</div></div><div class="dc2">CRM 18.432</div></div>
+            <div class="di"><div class="da c2">👨‍⚕️</div><div><div class="dn2">Dr. Carlos Menezes</div><div class="ds">Cardiologista</div></div><div class="dc2">CRM 24.110</div></div>
+            <div class="di"><div class="da c3">👩‍⚕️</div><div><div class="dn2">Dra. Fernanda Lima</div><div class="ds">Endocrinologia</div></div><div class="dc2">CRM 31.205</div></div>
+          </div>
+          <div class="card ip">
+            <div class="ch"><div class="ct">💡 Painel Informativo</div></div>
+            <div class="ii-grid">
+              <div class="ii vd"><div class="ii-ic">💉</div><div><div class="ii-ti">Vacinação em dia</div><div class="ii-tx">Próxima dose: Influenza em Julho/2026. Procure a UBASF com a carteira.</div></div></div>
+              <div class="ii az"><div class="ii-ic">💊</div><div><div class="ii-ti">Medicamentos</div><div class="ii-tx">Retirada na UBASF de seg. a sex., das 7h às 17h.</div></div></div>
+              <div class="ii am"><div class="ii-ic">📞</div><div><div class="ii-ti">Contato da Unidade</div><div class="ii-tx">Urgências: SAMU 192 · Procure sua UBASF de referência.</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec" id="sec-agend">
+        <button class="btn-new" onclick="abrirNovoAg()">＋ Novo Agendamento</button>
+        <div id="ag-list"></div>
+      </div>
+
+      <div class="sec" id="sec-hist">
+        <div class="hf">
+          <button class="fb active" onclick="filtH('todos',this)">Todos</button>
+          <button class="fb" onclick="filtH('2026',this)">2026</button>
+          <button class="fb" onclick="filtH('2025',this)">2025</button>
+          <button class="fb" onclick="filtH('realizado',this)">Realizados</button>
+          <button class="fb" onclick="filtH('cancelado',this)">Cancelados</button>
+        </div>
+        <div class="ht"><table><thead><tr><th>Data</th><th>Médico</th><th>Especialidade</th><th>Unidade</th><th>Status</th></tr></thead><tbody id="hist-tb"></tbody></table></div>
+      </div>
+
+      <div class="sec" id="sec-med">
+        <div class="cg">
+          <div class="mc2"><div class="mci">👩‍⚕️</div><div class="mcn">Dra. Ana Paula Costa</div><div class="mce">Clínica Geral</div><div class="mcc">CRM 18.432 — CE</div><div class="mcd">UBASF Edmar Barreira Pinheiro</div><button class="mc-btn" onclick="agComMed('Dra. Ana Paula Costa — Clínica Geral')">📅 Agendar consulta</button></div>
+          <div class="mc2"><div class="mci">👨‍⚕️</div><div class="mcn">Dr. Carlos Menezes</div><div class="mce">Cardiologista</div><div class="mcc">CRM 24.110 — CE</div><div class="mcd">UBASF Nossa Senhora das Candeias</div><button class="mc-btn" onclick="agComMed('Dr. Carlos Menezes — Cardiologia')">📅 Agendar consulta</button></div>
+          <div class="mc2"><div class="mci">👩‍⚕️</div><div class="mcn">Dra. Fernanda Lima</div><div class="mce">Endocrinologista</div><div class="mcc">CRM 31.205 — CE</div><div class="mcd">UBASF Maêdja Barreira Gomes</div><button class="mc-btn" onclick="agComMed('Dra. Fernanda Lima — Endocrinologia')">📅 Agendar consulta</button></div>
+        </div>
+      </div>
+
+      <div class="sec" id="sec-avisos">
+        <div class="av-list">
+          <div class="av-c urg"><div class="av-ic">🚨</div><div><div class="av-ti">Suspensão de atendimentos — Feriado Municipal</div><div class="av-tx">As unidades básicas de saúde estarão fechadas nos feriados municipais oficiais de Jaguaribe. Atendimentos de urgência devem procurar as unidades de pronto atendimento.</div><div class="av-mt"><span class="av-dt">📅 14/05/2026</span><span class="av-tg urg">Urgente</span></div></div></div>
+          <div class="av-c alt"><div class="av-ic">💉</div><div><div class="av-ti">Campanha de Vacinação Influenza 2026</div><div class="av-tx">A campanha para grupos prioritários (idosos, gestantes, crianças e profissionais de saúde) segue até 30 de junho de 2026. Procure a UBASF mais próxima com a carteira de vacinação.</div><div class="av-mt"><span class="av-dt">📅 08/05/2026</span><span class="av-tg alt">Atenção</span></div></div></div>
+          <div class="av-c inf"><div class="av-ic">📋</div><div><div class="av-ti">Novo sistema de agendamento online disponível</div><div class="av-tx">A partir de maio de 2026, consultas de retorno podem ser agendadas diretamente por esta plataforma. Acesse Agendamentos e solicite uma nova consulta sem precisar comparecer à unidade.</div><div class="av-mt"><span class="av-dt">📅 01/05/2026</span><span class="av-tg inf">Informativo</span></div></div></div>
+        </div>
+      </div>
+
+      <div class="sec" id="sec-docs">
+        <button class="btn-new" onclick="aM('m-doc')">＋ Adicionar Documento</button>
+        <div class="dg2" id="doc-grid"></div>
+      </div>
+
+      <div class="sec" id="sec-perfil">
+        <div class="pc">
+          <div class="ph"><div class="pav" id="p-av">?</div><div><div class="pn" id="p-nm">—</div><div class="pc2" id="p-cpf">—</div></div></div>
+          <div>
+            <div class="prow"><label>Data de Nascimento</label><div class="pv" id="p-nasc">—</div></div>
+            <div class="prow"><label>Telefone</label><div class="pv" id="p-tel">—</div></div>
+            <div class="prow"><label>E-mail</label><div class="pv" id="p-em">—</div></div>
+            <div class="prow"><label>Unidade de Saúde</label><div class="pv" id="p-ubs">—</div></div>
+          </div>
+          <div style="margin-top:22px"><button class="bk" onclick="abrirPerfil()">✏️ Editar informações</button></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+// ══ BANCO DE DADOS LOCAL PERSISTENTE (localStorage) ══
+let user=null, ags=[], docs=[];
+let fotoTemporaria = "";
+
+// Inicializa a coleção de usuários pegando do localStorage definitivo
+let users=JSON.parse(localStorage.getItem('snt_u')||'[]');
+
+// Se o banco local estiver totalmente vazio, cria o usuário padrão demo (Maria Oliveira) para facilitar os testes iniciais
+if(users.length === 0) {
+  const usuarioDemo = {
+    cpf:'123.456.789-00',nome:'Maria Oliveira',nasc:'1985-03-22',tel:'(85) 98765-4321',email:'maria@email.com',ubs:'UBASF Edmar Barreira Pinheiro (Sede) — Rua Antônio Weima Fernandes Bezerra, 831',senha:'123456',foto:'',
+    ags:[
+      {id:'a1',med:'Dra. Ana Paula Costa — Clínica Geral',data:'2026-05-20',hora:'09:30',tipo:'Consulta de Rotina',obs:'',status:'confirmado'},
+      {id:'a2',med:'Dr. Carlos Menezes — Cardiologia',data:'2026-06-03',hora:'14:00',tipo:'Retorno',obs:'Trazer eletrocardiograma anterior.',status:'pendente'},
+    ],
+    docs:[
+      {id:1,nome:'Receita Médica — Cardiologia',tipo:'pdf',categoria:'Receita Médica',data:'08/04/2026',ic:'💊'},
+      {id:2,nome:'Laudo Eletrocardiograma',tipo:'pdf',categoria:'Laudo / Resultado',data:'07/04/2026',ic:'🩺'},
+      {id:3,nome:'Resultado Exame de Sangue',tipo:'pdf',categoria:'Laudo / Resultado',data:'22/03/2026',ic:'🧪'},
+      {id:4,nome:'Atestado Médico',tipo:'pdf',categoria:'Atestado',data:'22/03/2026',ic:'📋'},
+      {id:5,nome:'Receita Endocrinologia',tipo:'pdf',categoria:'Receita Médica',data:'22/03/2026',ic:'💊'},
+      {id:6,nome:'Raio-X Tórax',tipo:'img',categoria:'Exame de Imagem',data:'05/01/2026',ic:'🖼️'},
+      {id:7,nome:'Declaração de Comparecimento',tipo:'pdf',categoria:'Declaração',data:'05/01/2026',ic:'📄'},
+    ]
+  };
+  users.push(usuarioDemo);
+  localStorage.setItem('snt_u', JSON.stringify(users));
+}
+
+const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MESES_LONG=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const HIST_BASE=[
+  {data:'12/05/2026',medico:'Dra. Ana Paula Costa',esp:'Clínica Geral',ubs:'UBASF Edmar Barreira Pinheiro',status:'realizado'},
+  {data:'08/04/2026',medico:'Dr. Carlos Menezes',esp:'Cardiologia',ubs:'UBASF Nossa Senhora das Candeias',status:'realizado'},
+  {data:'22/03/2026',medico:'Dra. Fernanda Lima',esp:'Endocrinologia',ubs:'UBASF Maêdja Barreira Gomes',status:'realizado'},
+  {data:'14/02/2026',medico:'Dra. Ana Paula Costa',esp:'Clínica Geral',ubs:'UBASF Edmar Barreira Pinheiro',status:'cancelado'},
+  {data:'05/01/2026',medico:'Dr. Carlos Menezes',esp:'Cardiologia',ubs:'UBASF Nossa Senhora das Candeias',status:'realizado'},
+  {data:'18/11/2025',medico:'Dra. Fernanda Lima',esp:'Endocrinologia',ubs:'UBASF Maêdja Barreira Gomes',status:'realizado'},
+  {data:'30/09/2025',medico:'Dra. Ana Paula Costa',esp:'Clínica Geral',ubs:'UBASF Edmar Barreira Pinheiro',status:'realizado'},
+];
+
+// ══ TOAST ══
+function toast(msg,err=false){
+  const t=document.getElementById('toast');
+  const el=document.createElement('div');
+  el.className='ti'+(err?' err':'');
+  el.textContent=msg;
+  t.appendChild(el);
+  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),300)},3200);
+}
+
+// ══ MÁSCARAS ══
+function mkCPF(id){const el=document.getElementById(id);if(el)el.addEventListener('input',function(e){let v=e.target.value.replace(/\D/g,'');if(v.length>3)v=v.slice(0,3)+'.'+v.slice(3);if(v.length>7)v=v.slice(0,7)+'.'+v.slice(7);if(v.length>11)v=v.slice(0,11)+'-'+v.slice(11);e.target.value=v.slice(0,14);});}
+function mkTel(id){const el=document.getElementById(id);if(el)el.addEventListener('input',function(e){let v=e.target.value.replace(/\D/g,'');if(v.length>2)v='('+v.slice(0,2)+') '+v.slice(2);if(v.length>9)v=v.slice(0,9)+'-'+v.slice(9);e.target.value=v.slice(0,15);});}
+mkCPF('inp-cpf');mkCPF('c-cpf');mkTel('c-tel');mkTel('pf-tel');
+
+// ══ FOTO DE PERFIL VIA BASE64 PERSISTENTE ══
+function tratarUploadFoto(input, idContainerPreview) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    toast('Por favor, selecione um arquivo de imagem válido.', true);
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    fotoTemporaria = e.target.result;
+    document.getElementById(idContainerPreview).innerHTML = `<img src="${fotoTemporaria}" alt="Foto">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ══ TABS ══
+function trocarTab(t,btn){
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-login').style.display=t==='login'?'block':'none';
+  document.getElementById('tab-cad').style.display=t==='cad'?'block':'none';
+  fotoTemporaria = "";
+  document.getElementById('c-photo-prev').innerHTML = "👤";
+  const f=document.getElementById('c-photo-input');if(f)f.value = "";
+}
+
+// ══ BANCO DE DADOS: CRIAR REGISTRO DE CONTA (INSERT) ══
+function criarConta(){
+  const nm=document.getElementById('c-nm').value.trim();
+  const cpf=document.getElementById('c-cpf').value.trim();
+  const nasc=document.getElementById('c-nasc').value;
+  const tel=document.getElementById('c-tel').value.trim();
+  const ubs=document.getElementById('c-ubs').value;
+  const pw=document.getElementById('c-pw').value;
+  const pw2=document.getElementById('c-pw2').value;
+  if(!nm){toast('Informe seu nome completo.',true);return;}
+  if(cpf.length<14){toast('Informe um CPF válido.',true);return;}
+  if(!nasc){toast('Informe sua data de nascimento.',true);return;}
+  if(!ubs){toast('Selecione sua UBASF.',true);return;}
+  if(pw.length<6){toast('A senha deve ter ao menos 6 caracteres.',true);return;}
+  if(pw!==pw2){toast('As senhas não coincidem.',true);return;}
+  
+  // Atualiza a lista local antes de verificar duplicidade
+  users = JSON.parse(localStorage.getItem('snt_u')||'[]');
+  if(users.find(u=>u.cpf===cpf)){toast('CPF já cadastrado. Faça login.',true);return;}
+  
+  const novoUsuario={
+    cpf,nome:nm,nasc,tel,email:'',ubs,senha:pw,foto:fotoTemporaria,ags:[],
+    docs:[
+      {id:1,nome:'Receita Médica — Cardiologia',tipo:'pdf',categoria:'Receita Médica',data:dtBR(new Date().toISOString().split('T')[0]),ic:'💊'},
+      {id:2,nome:'Laudo Eletrocardiograma',tipo:'pdf',categoria:'Laudo / Resultado',data:dtBR(new Date().toISOString().split('T')[0]),ic:'🩺'},
+      {id:3,nome:'Resultado Exame de Sangue',tipo:'pdf',categoria:'Laudo / Resultado',data:dtBR(new Date().toISOString().split('T')[0]),ic:'🧪'},
+      {id:4,nome:'Atestado Médico',tipo:'pdf',categoria:'Atestado',data:dtBR(new Date().toISOString().split('T')[0]),ic:'📋'},
+      {id:5,nome:'Receita Endocrinologia',tipo:'pdf',categoria:'Receita Médica',data:dtBR(new Date().toISOString().split('T')[0]),ic:'💊'},
+      {id:6,nome:'Raio-X Tórax',tipo:'img',categoria:'Exame de Imagem',data:dtBR(new Date().toISOString().split('T')[0]),ic:'🖼️'},
+      {id:7,nome:'Declaração de Comparecimento',tipo:'pdf',categoria:'Declaração',data:dtBR(new Date().toISOString().split('T')[0]),ic:'📄'}
+    ]
+  };
+  
+  users.push(novoUsuario);
+  localStorage.setItem('snt_u',JSON.stringify(users));
+  toast('✅ Conta cadastrada com sucesso!');
+  
+  fotoTemporaria = "";
+  document.getElementById('c-photo-prev').innerHTML = "👤";
+  document.getElementById('c-photo-input').value = "";
+  
+  trocarTab('login',document.querySelectorAll('.tb')[0]);
+  document.getElementById('inp-cpf').value=cpf;
+}
+
+// ══ BANCO DE DADOS: CONSULTA DE LOGIN (SELECT) ══
+function fazerLogin(){
+  const cpf=document.getElementById('inp-cpf').value.trim();
+  const pw=document.getElementById('inp-pw').value.trim();
+  if(cpf.length<14){toast('Informe um CPF válido.',true);return;}
+  if(!pw){toast('Informe sua senha.',true);return;}
+  
+  users = JSON.parse(localStorage.getItem('snt_u')||'[]');
+  let u=users.find(x=>x.cpf===cpf&&x.senha===pw);
+  
+  if(!u){toast('CPF ou senha incorretos ou conta não encontrada.',true);return;}
+  entrar(u);
+}
+
+function entrar(u){
+  user=u; 
+  ags=u.ags||[]; 
+  docs=u.docs||[];
+  renderizarAvatares();
+  document.getElementById('sb-nm').textContent=u.nome;
+  document.getElementById('sb-cpf').textContent='CPF: '+u.cpf;
+  document.getElementById('d-nm').textContent=u.nome.split(' ')[0];
+  document.getElementById('d-ubs').textContent=u.ubs||'Unidade não informada';
+  atualizarPerfil();
+  renderAg(); renderHist('todos'); renderDocs();
+  setDate();
+  document.getElementById('pg-login').style.display='none';
+  document.getElementById('pg-app').classList.add('active');
+  nav('dash',document.querySelector('.ni'));
+}
+
+function renderizarAvatares() {
+  if (user.foto) {
+    ['sb-av','p-av'].forEach(id => {
+      document.getElementById(id).innerHTML = `<img src="${user.foto}" alt="Foto de perfil">`;
+    });
+  } else {
+    const ini=user.nome.trim().split(' ');
+    const ab=(ini[0][0]+(ini[1]?ini[1][0]:'')).toUpperCase();
+    ['sb-av','p-av'].forEach(id => {
+      document.getElementById(id).innerHTML = ab;
+    });
+  }
+}
+
+// ══ NAVEGAÇÃO ══
+const TITLES={dash:'Início',agend:'Agendamentos',hist:'Histórico de Atendimentos',med:'Meus Médicos',avisos:'Avisos',docs:'Documentos',perfil:'Meu Perfil'};
+function nav(id,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.getElementById('tp-title').textContent=TITLES[id]||id;
+  if(id==='avisos')document.getElementById('bdg-av').style.display='none';
+}
+function setDate(){const d=new Date();const s=d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});document.getElementById('tp-date').textContent=s.charAt(0).toUpperCase()+s.slice(1);}
+
+// ══ AGENDAMENTOS (READ / RENDER) ══
+function renderAg(){
+  const ativos=ags.filter(a=>a.status!=='cancelado');
+  document.getElementById('st-ag').textContent=ativos.length;
+  const dl=document.getElementById('d-agend-list');
+  if(!ativos.length){dl.innerHTML='<div class="empty"><div class="ei">📅</div><p>Nenhuma consulta agendada</p></div>';return;}
+  dl.innerHTML=ativos.slice(0,3).map(a=>{
+    const [y,m,d]=a.data.split('-');
+    const sc=a.status==='confirmado'?'sco':'spd';
+    const sl=a.status==='confirmado'?'Confirmado':'Pendente';
+    const [doc]=a.med.split(' — ');
+    const esp=a.med.split(' — ')[1]||'';
+    return `<div class="ai"><div class="ad"><div class="dy">${d}</div><div class="mn2">${MESES[+m-1]}</div></div><div class="an"><div class="dn">${doc}</div><div class="sp">${esp} · ${a.hora}</div></div><div class="ast ${sc}">${sl}</div></div>`;
+  }).join('');
+  
+  const al=document.getElementById('ag-list');
+  if(!ags.length){al.innerHTML='<div class="empty"><div class="ei">📅</div><p>Nenhum agendamento ainda. Clique em "Novo Agendamento".</p></div>';return;}
+  al.innerHTML=ags.map(a=>{
+    const [y,m,d]=a.data.split('-');
+    const sc=a.status==='confirmado'?'sco':a.status==='cancelado'?'scl':'spd';
+    const sl=a.status==='confirmado'?'Confirmado':a.status==='cancelado'?'Cancelado':'Pendente';
+    const [doc]=a.med.split(' — ');
+    const esp=a.med.split(' — ')[1]||'';
+    const acts=a.status!=='cancelado'
+      ?`<button class="be" onclick="editAg('${a.id}')">✏️ Editar</button><button class="bd" onclick="pedCancel('${a.id}')">✕ Cancelar</button>`
+      :`<span style="font-size:12px;color:var(--lv);padding:7px">—</span>`;
+    return `<div class="ag-item"><div class="ag-dt"><div class="dy">${d}</div><div class="mn2">${MESES[+m-1]}</div></div><div class="ag-inf"><div class="doc">${doc}</div><div class="spe">${esp} · ${a.hora} · ${a.tipo}</div>${a.obs?`<div class="obs">📝 ${a.obs}</div>`:''}</div><div class="ast ${sc}" style="margin-right:10px">${sl}</div><div class="ag-acts">${acts}</div></div>`;
+  }).join('');
+}
+
+function abrirNovoAg(){
+  document.getElementById('m-agend-ti').textContent='Novo Agendamento';
+  document.getElementById('ae-id').value='';
+  document.getElementById('ae-med').value='';
+  document.getElementById('ae-data').value='';
+  document.getElementById('ae-hora').value='09:00';
+  document.getElementById('ae-tipo').value='Consulta de Rotina';
+  document.getElementById('ae-obs').value='';
+  aM('m-agend');
+}
+
+function agComMed(med){
+  abrirNovoAg();
+  document.getElementById('ae-med').value=med;
+  nav('agend',document.querySelectorAll('.ni')[1]);
+}
+
+function editAg(id){
+  const a=ags.find(x=>x.id===id);if(!a)return;
+  document.getElementById('m-agend-ti').textContent='Editar Agendamento';
+  document.getElementById('ae-id').value=id;
+  document.getElementById('ae-med').value=a.med;
+  document.getElementById('ae-data').value=a.data;
+  document.getElementById('ae-hora').value=a.hora;
+  document.getElementById('ae-tipo').value=a.tipo;
+  document.getElementById('ae-obs').value=a.obs||'';
+  aM('m-agend');
+}
+
+// ══ BANCO DE DADOS: ADICIONAR / ATUALIZAR AGENDAMENTO (CREATE / UPDATE) ══
+function salvarAg(){
+  const med=document.getElementById('ae-med').value;
+  const data=document.getElementById('ae-data').value;
+  const hora=document.getElementById('ae-hora').value;
+  const tipo=document.getElementById('ae-tipo').value;
+  const obs=document.getElementById('ae-obs').value.trim();
+  const eid=document.getElementById('ae-id').value;
+  if(!med){toast('Selecione um médico.',true);return;}
+  if(!data){toast('Selecione a data.',true);return;}
+  
+  if(eid){
+    const i=ags.findIndex(x=>x.id===eid);
+    ags[i]={...ags[i],med,data,hora,tipo,obs};
+    toast('✅ Agendamento alterado e gravado no banco!');
+  } else {
+    ags.push({id:'a'+Date.now(),med,data,hora,tipo,obs,status:'pendente'});
+    toast('✅ Novo agendamento inserido e gravado com sucesso!');
+  }
+  salvarNoBanco(); fM('m-agend'); renderAg();
+}
+
+function pedCancel(id){document.getElementById('ca-id').value=id;aM('m-cancel');}
+
+// ══ BANCO DE DADOS: CANCELAR AGENDAMENTO (UPDATE STATUS) ══
+function confCancel(){
+  const id=document.getElementById('ca-id').value;
+  const i=ags.findIndex(x=>x.id===id);
+  if(i>=0) ags[i].status='cancelado';
+  salvarNoBanco(); fM('m-cancel'); renderAg(); toast('Consulta marcada como cancelada no banco.');
+}
+
+// ══ HISTÓRICO ══
+function filtH(f,btn){
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHist(f);
+}
+function renderHist(f){
+  const cancelados=ags.filter(a=>a.status==='cancelado').map(a=>({data:dtBR(a.data),medico:a.med.split(' — ')[0],esp:a.med.split(' — ')[1]||'',ubs:user.ubs?user.ubs.split(' — ')[0]:'UBASF',status:'cancelado'}));
+  let todos=[...HIST_BASE,...cancelados];
+  if(f==='2026')todos=todos.filter(r=>r.data.includes('2026'));
+  else if(f==='2025')todos=todos.filter(r=>r.data.includes('2025'));
+  else if(f==='realizado')todos=todos.filter(r=>r.status==='realizado');
+  else if(f==='cancelado')todos=todos.filter(r=>r.status==='cancelado');
+  const tb=document.getElementById('hist-tb');
+  if(!todos.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--lv);padding:28px">Nenhum registro encontrado.</td></tr>';return;}
+  tb.innerHTML=todos.map(r=>{const tc=r.status==='realizado'?'tr':r.status==='cancelado'?'tc':'ta';const tl=r.status==='realizado'?'Realizado':r.status==='cancelado'?'Cancelado':'Agendado';return`<tr><td>${r.data}</td><td>${r.medico}</td><td>${r.esp}</td><td>${r.ubs.split(' — ')[0]}</td><td><span class="tag ${tc}">${tl}</span></td></tr>`;}).join('');
+}
+
+// ══ DOCUMENTOS (READ / RENDER) ══
+function renderDocs(){
+  document.getElementById('st-dc').textContent=docs.length;
+  const g=document.getElementById('doc-grid');
+  if(!docs.length){g.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">📄</div><p>Nenhum documento encontrado no banco. Adicione um novo.</p></div>';return;}
+  g.innerHTML=docs.map(d=>`
+    <div class="dc3" onclick="abrirVisualizadorDoc(${d.id})">
+      <button class="btn-del-doc" onclick="event.stopPropagation(); removerDoc(${d.id})" title="Remover Documento do Banco">✕</button>
+      <div class="dci">${d.ic||'📄'}</div>
+      <div class="dcn">${d.nome}</div>
+      <div class="dcd">Emitido em ${d.data}</div>
+      <span class="dcb ${d.tipo}">${d.tipo.toUpperCase()}</span>
+    </div>
+  `).join('');
+}
+
+// ══ BANCO DE DADOS: INSERIR NOVO DOCUMENTO (CREATE) ══
+function salvarDoc(){
+  const nm=document.getElementById('dc-nm').value.trim();
+  const tp=document.getElementById('dc-tp').value;
+  const cat=document.getElementById('dc-cat').value;
+  const dt=document.getElementById('dc-dt').value;
+  if(!nm){toast('Informe o nome do documento.',true);return;}
+  if(!dt){toast('Informe a data de execução.',true);return;}
+  
+  const icones={'Receita Médica':'💊','Laudo / Resultado':'🩺','Atestado':'📋','Declaração':'📄','Exame de Imagem':'🖼️','Outros':'📄'};
+  docs.unshift({id:Date.now(),nome:nm,tipo:tp,categoria:cat,data:dtBR(dt),ic:icones[cat]||'📄'});
+  
+  salvarNoBanco(); fM('m-doc'); renderDocs(); toast('✅ Documento catalogado e gravado com sucesso!');
+  
+  document.getElementById('dc-nm').value='';
+  document.getElementById('dc-dt').value='';
+}
+
+// ══ BANCO DE DADOS: DELETAR DOCUMENTO (DELETE) ══
+function removerDoc(id) {
+  if(confirm("Deseja realmente excluir este documento do seu histórico definitivo?")) {
+    docs = docs.filter(d => d.id !== id);
+    salvarNoBanco();
+    renderDocs();
+    toast("🗑️ Documento removido do banco de dados local.");
+  }
+}
+
+// ══ SISTEMA GERADOR EMISSOR DE DOCUMENTOS OFICIAIS DINÂMICOS ══
+function abrirVisualizadorDoc(id) {
+  const d = docs.find(x => x.id === id);
+  if (!d) return;
+
+  const ubsOficial = user.ubs ? user.ubs.split(' — ')[0] : 'Unidade Básica de Saúde da Família';
+  const ubsEndereco = user.ubs && user.ubs.split(' — ')[1] ? user.ubs.split(' — ')[1] : 'Sede Municipal';
+
+  let htmlDoc = `
+    <div class="a4-logo">SUS</div>
+    <div class="a4-sub">Secretaria Municipal de Saúde · Governo Municipal<br>${ubsOficial}</div>
+  `;
+
+  const pBox = `
+    <div class="a4-paciente-box">
+      <table>
+        <tr><td><b>PACIENTE:</b> ${user.nome}</td><td><b>CPF:</b> ${user.cpf}</td></tr>
+        <tr><td><b>DATA EMISSÃO:</b> ${d.data}</td><td><b>ESTABELECIMENTO:</b> ${ubsOficial}</td></tr>
+      </table>
+    </div>
+  `;
+
+  if (d.nome.includes('Receita Médica') && !d.nome.includes('Endocrinologia')) {
+    htmlDoc += `
+      <div class="a4-title">Receituário Clínico Geral</div>
+      ${pBox}
+      <div class="a4-content">
+        <p style="font-weight:600;margin-bottom:8px">Uso Oral:</p>
+        <p><b>1. Amoxicilina 500mg</b> ———————— 21 Cápsulas<br>Tomar 1 cápsula via oral de 8 em 8 horas por 7 dias.</p>
+        <p><b>2. Paracetamol 750mg</b> ———————— 10 Comprimidos<br>Tomar 1 comprimido via oral em caso de dor ou febre (≥ 37.8°C) de 6 em 6 horas.</p>
+        <p style="margin-top:30px;color:var(--lv);font-size:13px"><i>Observações: Manter hidratação adequada. Retornar se persistirem os sintomas.</i></p>
+      </div>
+      <div class="a4-assinatura">
+        <div class="a4-line"></div>
+        <div><b>Dra. Ana Paula Costa</b></div>
+        <div style="font-size:12px;color:var(--lv)">Medicina Geral e Comunitária · CRM 18.432 — CE</div>
+      </div>
+    `;
+  } 
+  else if (d.nome.includes('Endocrinologia') || d.nome.includes('Receita Endocrinologia')) {
+    htmlDoc += `
+      <div class="a4-title">Receituário Especializado</div>
+      ${pBox}
+      <div class="a4-content">
+        <p style="font-weight:600;margin-bottom:8px">Uso Contínuo:</p>
+        <p><b>1. Cloridrato de Metformina 850mg</b> ———————— 60 Comprimidos<br>Tomar 1 comprimido via oral junto ao café da manhã e 1 comprimido junto ao jantar.</p>
+        <p><b>2. Levotiroxina Sódica 50mcg</b> ———————— 30 Comprimidos<br>Tomar 1 comprimido via oral diariamente em jejum, 30 minutos antes do café da manhã.</p>
+      </div>
+      <div class="a4-assinatura">
+        <div class="a4-line"></div>
+        <div><b>Dra. Fernanda Lima</b></div>
+        <div style="font-size:12px;color:var(--lv)">Endocrinologia e Metabologia · CRM 31.205 — CE</div>
+      </div>
+    `;
+  }
+  else if (d.nome.includes('Laudo Eletrocardiograma') || d.nome.includes('ECG')) {
+    htmlDoc += `
+      <div class="a4-title">Laudo de Eletrocardiograma (ECG)</div>
+      ${pBox}
+      <div class="a4-content">
+        <table class="a4-table">
+          <tr><th>Parâmetro Clínico</th><th>Medido</th><th>Referência</th></tr>
+          <tr><td>Frequência Cardíaca</td><td>72 bpm</td><td>60 - 100 bpm</td></tr>
+          <tr><td>Ritmo</td><td>Sinusal</td><td>Sinusal</td></tr>
+          <tr><td>Intervalo PR</td><td>0,14 s</td><td>0,12 - 0,20 s</td></tr>
+          <tr><td>Complexo QRS</td><td>0,09 s</td><td>< 0,11 s</td></tr>
+          <tr><td>Segmento ST</td><td>Nivelado</td><td>Sem desníveis</td></tr>
+        </table>
+        <div class="ecg-grid-sim">
+          <svg class="ecg-wave" viewBox="0 0 500 100" preserveAspectRatio="none">
+            <path d="M0,50 L50,50 L60,50 L65,35 L70,55 L75,50 L100,50 L110,50 L113,10 L118,90 L122,50 L140,50 L160,55 L175,45 L180,50 L250,50 L260,50 L265,35 L270,55 L275,50 L300,50 L310,50 L313,10 L318,90 L322,50 L400,50" stroke="#ff3333" stroke-width="1.5" fill="none"/>
+          </svg>
+        </div>
+        <p style="margin-top:15px"><b>Conclusão Diagnóstica:</b> Ritmo sinusal regular, sem alterações da condução intraventricular ou da repolarização ventricular. Traçado dentro dos parâmetros esperados.</p>
+      </div>
+      <div class="a4-assinatura">
+        <div class="a4-line"></div>
+        <div><b>Dr. Carlos Menezes</b></div>
+        <div style="font-size:12px;color:var(--lv)">Cardiologia Coordenadora · CRM 24.110 — CE</div>
+      </div>
+    `;
+  }
+  else if (d.nome.includes('Exame de Sangue') || d.nome.includes('Hemograma') || d.categoria === 'Laudo / Resultado') {
+    htmlDoc += `
+      <div class="a4-title">Resultado de Patologia Clínica · Hemograma</div>
+      ${pBox}
+      <div class="a4-content">
+        <p><b>SÉRIE VERMELHA (Eritograma)</b></p>
+        <table class="a4-table">
+          <tr><th>Análise</th><th>Resultado</th><th>Valores de Referência</th></tr>
+          <tr><td>Eritrócitos</td><td>4.85 M/µL</td><td>4.30 - 5.90 M/µL</td></tr>
+          <tr><td>Hemoglobina</td><td>14.2 g/dL</td><td>13.5 - 17.5 g/dL</td></tr>
+        </table>
+        <br>
+        <p><b>BIOQUÍMICA</b></p>
+        <table class="a4-table">
+          <tr><th>Análise</th><th>Resultado</th><th>Valores de Referência</th></tr>
+          <tr><td>Glicose em Jejum</td><td class="val-alerta">104 mg/dL</td><td>70 - 99 mg/dL</td></tr>
+          <tr><td>Colesterol Total</td><td>185 mg/dL</td><td>< 190 mg/dL</td></tr>
+        </table>
+      </div>
+      <div class="a4-footer">Análise automatizada emitida institucionalmente.</div>
+    `;
+  }
+  else if (d.nome.includes('Atestado Médico')) {
+    htmlDoc += `
+      <div class="a4-title">Atestado de Aptidão ou Afastamento</div>
+      ${pBox}
+      <div class="a4-content" style="font-size:15px;margin-top:30px">
+        <p>Atesto para os devidos fins que o(a) paciente <b>${user.nome}</b> foi submetido(a) a exame clínico nesta data, sendo constatada a necessidade justificável de repouso doméstico temporário.</p>
+        <p>Necessita, portanto, de <b>02 (dois) dias</b> de afastamento de suas obrigações habituais a contar desta data.</p>
+      </div>
+      <div class="a4-assinatura" style="margin-top:80px">
+        <div class="a4-line"></div>
+        <div><b>Corpo Médico Plantonista</b></div>
+        <div style="font-size:12px;color:var(--lv)">Validação Institucional Integrada</div>
+      </div>
+    `;
+  }
+  else if (d.nome.includes('Raio-X') || d.categoria === 'Exame de Imagem') {
+    htmlDoc += `
+      <div class="a4-title">Laudo Radiológico · Radiografia Digital</div>
+      ${pBox}
+      <div class="a4-content">
+        <div class="rx-frame">
+          <div class="rx-skeleton">
+            <div class="rx-spine"></div>
+            <div class="rx-rib"></div>
+            <div class="rx-rib" style="width:95%"></div>
+            <div class="rx-rib" style="width:88%"></div>
+          </div>
+          <div class="rx-label-side">R</div>
+        </div>
+        <p><b>Exame:</b> Radiografia de Tórax (PA)</p>
+        <p><b>Conclusão:</b> Campos pleuropulmonares livres de opacidades patológicas ativas. Silhueta cardíaca dentro dos limites normativos.</p>
+      </div>
+    `;
+  }
+  else {
+    htmlDoc += `
+      <div class="a4-title">Declaração de Comparecimento Oficial</div>
+      ${pBox}
+      <div class="a4-content" style="font-size:15px;margin-top:40px">
+        <p>Declaramos para os devidos fins de direito que o(a) cidadão(ã) <b>${user.nome}</b> esteve presente neste posto de saúde para fins de consulta/procedimento médico das <b>08:30 às 11:00</b>.</p>
+      </div>
+      <div class="a4-assinatura" style="margin-top:100px">
+        <div class="a4-line"></div>
+        <div>Supervisão de Atendimento e Recepção</div>
+        <div style="font-size:12px;color:var(--lv)">Endereço da Unidade: ${ubsEndereco}</div>
+      </div>
+    `;
+  }
+
+  htmlDoc += `<div class="a4-footer">Chave SNT-DB-${id}-${user.cpf.replace(/\D/g,'')} · Banco de Dados Autenticado</div>`;
+  document.getElementById('dv-header-title').textContent = d.nome + ' (Banco de Dados Local)';
+  document.getElementById('a4-render-area').innerHTML = htmlDoc;
+  aM('doc-viewer-modal');
+}
+
+// ══ PERFIL (READ / UPDATE) ══
+function abrirPerfil(){
+  document.getElementById('pf-nm').value=user.nome||'';
+  document.getElementById('pf-nasc').value=user.nasc||'';
+  document.getElementById('pf-tel').value=user.tel||'';
+  document.getElementById('pf-em').value=user.email||'';
+  document.getElementById('pf-ubs').value=user.ubs||'';
+  document.getElementById('pf-pw').value='';
+  
+  fotoTemporaria = user.foto || "";
+  if (fotoTemporaria) {
+    document.getElementById('pf-photo-prev').innerHTML = `<img src="${fotoTemporaria}" alt="Foto">`;
+  } else {
+    document.getElementById('pf-photo-prev').innerHTML = "👤";
+  }
+  const f=document.getElementById('pf-photo-input');if(f)f.value = "";
+  aM('m-perfil');
+}
+
+// ══ BANCO DE DADOS: UPDATE DE PERFIL (UPDATE) ══
+function salvarPerfil(){
+  const nm=document.getElementById('pf-nm').value.trim();
+  const nasc=document.getElementById('pf-nasc').value;
+  const tel=document.getElementById('pf-tel').value.trim();
+  const em=document.getElementById('pf-em').value.trim();
+  const ubs=document.getElementById('pf-ubs').value;
+  const pw=document.getElementById('pf-pw').value;
+  if(!nm){toast('O nome não pode ficar em branco.',true);return;}
+  if(pw&&pw.length<6){toast('A senha deve ter ao menos 6 caracteres.',true);return;}
+  
+  user.nome=nm; user.nasc=nasc; user.tel=tel; user.email=em; user.ubs=ubs;
+  user.foto=fotoTemporaria;
+  if(pw) user.senha=pw;
+  
+  renderizarAvatares();
+  document.getElementById('sb-nm').textContent=nm;
+  document.getElementById('d-nm').textContent=nm.split(' ')[0];
+  document.getElementById('d-ubs').textContent=ubs||'—';
+  atualizarPerfil();
+  salvarNoBanco(); fM('m-perfil'); toast('✅ Perfil atualizado e sincronizado no Banco de Dados!');
+}
+
+function atualizarPerfil(){
+  document.getElementById('p-nm').textContent=user.nome;
+  document.getElementById('p-cpf').textContent='CPF: '+user.cpf;
+  document.getElementById('p-nasc').textContent=user.nasc?dtFmt(user.nasc):'—';
+  document.getElementById('p-tel').textContent=user.tel||'—';
+  document.getElementById('p-em').textContent=user.email||'—';
+  document.getElementById('p-ubs').textContent=user.ubs||'—';
+}
+
+// ══ FUNÇÃO CONTROLADORA MESTRE DO BANCO DE DADOS LOCAL ══
+function salvarNoBanco(){
+  user.ags=ags;
+  user.docs=docs;
+  // Carrega o estado mais atualizado do banco antes do commit
+  users=JSON.parse(localStorage.getItem('snt_u')||'[]');
+  const i=users.findIndex(u=>u.cpf===user.cpf);
+  if(i>=0) users[i]=user;
+  else users.push(user);
+  // Commita as alterações de forma persistente
+  localStorage.setItem('snt_u',JSON.stringify(users));
+}
+
+function dtBR(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return`${d}/${m}/${y}`;}
+function dtFmt(iso){if(!iso)return'—';const[y,m,d]=iso.split('-');return`${d} de ${MESES_LONG[+m-1]} de ${y}`;}
+function aM(id){document.getElementById(id).classList.add('open');}
+function fM(id){document.getElementById(id).classList.remove('open');}
+
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
+
+function sair(){
+  if(confirm('Deseja se desconectar do Saúde no Tempo? Todos os seus dados continuarão salvos com segurança.')){
+    document.getElementById('pg-app').classList.remove('active');
+    document.getElementById('pg-login').style.display='flex';
+    document.getElementById('inp-cpf').value='';
+    document.getElementById('inp-pw').value='';
+    user=null;ags=[];docs=[];fotoTemporaria="";
+    document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+    document.getElementById('sec-dash').classList.add('active');
+    document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+    document.querySelector('.ni').classList.add('active');
+    document.getElementById('bdg-av').style.display='';
+  }
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||document.getElementById('pg-login').style.display==='none')return;
+  if(document.getElementById('tab-login').style.display!=='none')fazerLogin();
+  else criarConta();
+});
+</script>
+</body>
+</html>
